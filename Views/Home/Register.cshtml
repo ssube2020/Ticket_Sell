@@ -1,0 +1,69 @@
+﻿@using Ticket_Sell.Models;
+@{
+    ViewBag.Title = "Register";
+}
+
+<h2>Register</h2>
+<h4 class="text-danger"> @TempData["personexists"] </h4>  
+<h4 class="text-success"> @TempData["regSuccess"] </h4>
+<h4 class="text-danger"> @TempData["usernameError"] </h4>
+<h4 class="text-danger"> @TempData["passwordsMatchErr"] </h4>
+<h4 class="text-danger"> @TempData["PNerror"] </h4>
+<h4 class="text-danger"> @TempData["MobileError"] </h4>
+
+<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<!------ Include the above in your HEAD tag ---------->
+
+<form class="form-horizontal" asp-controller="Home" asp-action="Register" method="post">
+    <fieldset>
+        <div class="control-group">
+            <!-- Username -->
+            <label class="control-label1" for="username">Username:</label>
+            <input type="text" id="username" name="Username" placeholder="" class="input-xlarge">
+        </div>
+
+        <div class="control-group">
+            <!-- E-mail -->
+            <label class="control-label1" for="email">E-mail:</label>
+            <input type="text" id="email" name="Email" placeholder="" class="input-xlarge">
+        </div>
+
+        <div class="control-group">
+            <!-- Password -->
+            <label class="control-label1" for="PN"> Private Number:</label>
+            <input type="text" id="pn" name="PN" placeholder="" class="input-xlarge">
+        </div>
+
+        <div class="control-group">
+            <!-- Password -->
+            <label class="control-label1" for="Mobile"> Mobile:</label>
+            <input type="text" id="Mobile" name="Mobile" placeholder="" class="input-xlarge">
+        </div>
+
+        <div class="control-group">
+            <!-- Password-->
+            <label class="control-label1" for="password">Password:</label>
+            <input type="password" id="password" name="Password" placeholder="" class="input-xlarge">
+        </div>
+
+        <div class="control-group">
+            <!-- Password -->
+            <label class="control-label1" for="password_confirm"> Confirm Password:</label>
+            <input type="password" id="password_confirm" name="ConfirmPassword" placeholder="" class="input-xlarge">
+        </div>
+
+
+
+        <div class="control-group">
+            <!-- Button -->
+            <div class="controls">
+                <button type="submit" class="btn btn-success reg-btn">Register </button>
+            </div>
+        </div>
+    </fieldset>
+</form>
+
+
+
