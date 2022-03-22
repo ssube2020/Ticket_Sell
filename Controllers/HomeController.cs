@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Ticket_Sell.Data;
+using Ticket_Sell.Helpers;
 using Ticket_Sell.Models;
 
 namespace Ticket_Sell.Controllers
@@ -30,13 +31,13 @@ namespace Ticket_Sell.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Register(RegistrationModel model)
+        public async Task<ActionResult> Register(RegistrationModel model, int UserTypeId)
         {
 
             if (!ModelState.IsValid)
             {
                 int alphabeticNumbers = Regex.Matches(model.Username, @"[a-zA-Z]").Count;
-                if(alphabeticNumbers == 0)
+                if (alphabeticNumbers == 0)
                 {
                     TempData["usernameError"] = "მომხმარებლის სახელი უნდა შეიცავდეს მინიმუმ 1 ასოს!";
                 }
@@ -44,7 +45,7 @@ namespace Ticket_Sell.Controllers
                 {
                     TempData["passwordsMatchErr"] = "პაროლები არ ემთხვევა";
                 }
-                if (model.PN.Length != 11)
+                if (model.PN.Length != 11 || string.IsNullOrEmpty(model.PN))
                 {
                     TempData["PNerror"] = "შეიყვანეთ პირადი ნომერი სწორად! ";
                 }
@@ -62,14 +63,16 @@ namespace Ticket_Sell.Controllers
                 return View();
             } else
             {
+                string PassHash = HashPassword.GetPassHash(model.Password);
+                string Salt = HashPassword.saltstring;
                 User toregister = new();
                 toregister.Username = model.Username;
                 toregister.Email = model.Email;
                 toregister.Mobile = model.Mobile;
                 toregister.PN = model.PN;
-                toregister.UserTypeId = 1;
-                toregister.Password = model.Password;
-                toregister.Salt = "Salts1231!";
+                toregister.UserTypeId = UserTypeId;
+                toregister.Password = PassHash;
+                toregister.Salt = Salt;
                 toregister.Status = true;
                 _db.Users.Add(toregister);
                 _db.SaveChanges();
@@ -87,40 +90,75 @@ namespace Ticket_Sell.Controllers
         [HttpPost]
         public async Task<ActionResult> Login(string Username, string password)
         {
-
-            //if (!ModelState.IsValid)
-            //{
-            //    TempData["RequestError"] = ModelState.Values.SelectMany(e => e.Errors.Select(er => er.ErrorMessage));
-            //    return View(ModelState);
-            //}
             var prs = await _db.Users.Where(x => (x.Email == Username) || (x.Mobile == Username)).FirstOrDefaultAsync();
             if (prs == null)
             {
-                TempData["logerror"] = "username or password is not correct";
+                TempData["logerror"] = "სახელი ან პაროლი არასწორია";
                 return View();
             }
-            if(prs.Password == password)
+            string Salt = prs.Salt;
+            string PassHash = HashPassword.GetPassHash(password);
+            
+            if (prs.Password != PassHash)
             {
-                return Ok("Logged In Succesfully");
+                TempData["logerror"] = "სახელი ან პაროლი არასწორია";
+                return View();
+            }else if (password == PassHash)
+            {
+                return Ok("Logged In");
             }
-            //if (PerCheck == null)
-            //{
-            //    User toregister = new User();
-            //    toregister.Username = model.Username;
-            //    toregister.Email = model.Email;
-            //    toregister.Mobile = model.Mobile;
-            //    toregister.PN = model.PN;
-            //    toregister.UserTypeId = 1;
-            //    toregister.Password = model.Password;
-            //    toregister.Salt = "Salts1231!";
-            //    toregister.Status = true;
-            //    _db.Users.Add(toregister);
-            //    _db.SaveChanges();
-            //}
-            TempData["logerror1"] = "username or password is not correct";
+            return Ok("Invalid Login Attempt");
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> ForgotPassword()
+        {
             return View();
         }
 
+        [HttpPost]
+        public async Task<ActionResult> ForgotPassword(string email)
+        {
+            var per = await _db.Users.Where(x => x.Email == email).FirstOrDefaultAsync();
+            if(per == null)
+            {
+                TempData["notFound"] = "ამ მეილით მომხმარებელი ვერ მოიძებნა";
+                return View();
+            }
+            ViewData["personId"] = per.Id;
+            return View("ResetPassword");
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> ResetPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> ResetPassword(string newPass, string confPass, int persId)
+        {
+            if(newPass != confPass)
+            {
+                TempData["dontMatch"] = "Passwords does not match! ";
+                return View();
+            }
+            var perToChange = await _db.Users.Where(k => k.Id == persId).SingleOrDefaultAsync();
+            if(perToChange == null)
+            {
+                TempData["ChangeError"] = "could not find user";
+                return View();
+            }
+            if(perToChange.Password == newPass)
+            {
+                TempData["SamePass"] = "new password can not be old password";
+                return View();
+            }
+            perToChange.Password = newPass;
+            _db.SaveChanges();
+            TempData["ChangeSuccess"] = "password changed succesfully";
+            return RedirectToAction("Login", "Home");
+        }
         public IActionResult Privacy()
         {
             return View();

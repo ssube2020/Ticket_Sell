@@ -1,15 +1,11 @@
 ﻿@using Ticket_Sell.Models;
 @{
     ViewBag.Title = "Register";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
 }
 
 <h2>Register</h2>
-<h4 class="text-danger"> @TempData["personexists"] </h4>  
-<h4 class="text-success"> @TempData["regSuccess"] </h4>
-<h4 class="text-danger"> @TempData["usernameError"] </h4>
-<h4 class="text-danger"> @TempData["passwordsMatchErr"] </h4>
-<h4 class="text-danger"> @TempData["PNerror"] </h4>
-<h4 class="text-danger"> @TempData["MobileError"] </h4>
 
 <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
@@ -53,6 +49,7 @@
             <label class="control-label1" for="password_confirm"> Confirm Password:</label>
             <input type="password" id="password_confirm" name="ConfirmPassword" placeholder="" class="input-xlarge">
         </div>
+        <input type="hidden" name="UserTypeId" value="1" class="input-xlarge">
 
 
 
@@ -64,6 +61,13 @@
         </div>
     </fieldset>
 </form>
+
+<h4 class="text-danger"> @TempData["personexists"] </h4>
+<h4 class="text-success"> @TempData["regSuccess"] </h4>
+<h4 class="text-danger"> @TempData["usernameError"] </h4>
+<h4 class="text-danger"> @TempData["passwordsMatchErr"] </h4>
+<h4 class="text-danger"> @TempData["PNerror"] </h4>
+<h4 class="text-danger"> @TempData["MobileError"] </h4>
 
 
 

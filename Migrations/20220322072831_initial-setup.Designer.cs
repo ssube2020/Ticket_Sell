@@ -12,8 +12,8 @@ using Ticket_Sell.Data;
 namespace Ticket_Sell.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20220321105656_initial-tables")]
-    partial class initialtables
+    [Migration("20220322072831_initial-setup")]
+    partial class initialsetup
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
