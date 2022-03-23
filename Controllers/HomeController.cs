@@ -15,7 +15,7 @@ namespace Ticket_Sell.Controllers
         public HomeController(ILogger<HomeController> logger, ApplicationDbContext db)
         {
             _logger = logger;
-            _db = db;   
+            _db = db;
         }
 
         public IActionResult Index()
@@ -36,7 +36,7 @@ namespace Ticket_Sell.Controllers
             if (!ModelState.IsValid)
             {
                 int alphabeticNumbers = Regex.Matches(model.Username, @"[a-zA-Z]").Count;
-                if(alphabeticNumbers == 0)
+                if (alphabeticNumbers == 0)
                 {
                     TempData["usernameError"] = "მომხმარებლის სახელი უნდა შეიცავდეს მინიმუმ 1 ასოს!";
                 }
@@ -56,7 +56,7 @@ namespace Ticket_Sell.Controllers
                 return View(ModelState);
             }
             var PerCheck = await _db.Users.Where(k => (k.Email == model.Email) || (k.PN == model.PN)).FirstOrDefaultAsync();
-            if(PerCheck != null)
+            if (PerCheck != null)
             {
                 TempData["personexists"] = "მოცემული მეილით ან პირადი ნომრით მომხმარებელი უკვე არსებობს!";
                 return View();
@@ -87,37 +87,21 @@ namespace Ticket_Sell.Controllers
         [HttpPost]
         public async Task<ActionResult> Login(string Username, string password)
         {
-
-            //if (!ModelState.IsValid)
-            //{
-            //    TempData["RequestError"] = ModelState.Values.SelectMany(e => e.Errors.Select(er => er.ErrorMessage));
-            //    return View(ModelState);
-            //}
             var prs = await _db.Users.Where(x => (x.Email == Username) || (x.Mobile == Username)).FirstOrDefaultAsync();
             if (prs == null)
             {
-                TempData["logerror"] = "username or password is not correct";
+                TempData["logerror"] = "მომხმარებლის სახელი ან პაროლი არასწორია";
                 return View();
             }
-            if(prs.Password == password)
+            if(prs.Password != password)
+            {
+                TempData["logerror"] = "მომხმარებლის სახელი ან პაროლი არასწორია";
+                
+            } else
             {
                 return Ok("Logged In Succesfully");
             }
-            //if (PerCheck == null)
-            //{
-            //    User toregister = new User();
-            //    toregister.Username = model.Username;
-            //    toregister.Email = model.Email;
-            //    toregister.Mobile = model.Mobile;
-            //    toregister.PN = model.PN;
-            //    toregister.UserTypeId = 1;
-            //    toregister.Password = model.Password;
-            //    toregister.Salt = "Salts1231!";
-            //    toregister.Status = true;
-            //    _db.Users.Add(toregister);
-            //    _db.SaveChanges();
-            //}
-            TempData["logerror1"] = "username or password is not correct";
+            //TempData["logerror1"] = "username or password is not correct";
             return View();
         }
 
@@ -131,5 +115,49 @@ namespace Ticket_Sell.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        [HttpGet]
+        public async Task<ActionResult> ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> ForgotPassword(string userEmail)
+        {
+            var pers = await _db.Users.Where(k=>k.Email == userEmail).FirstOrDefaultAsync();
+            if (pers == null)
+            {
+                TempData["notfound"] = "მოცემული მეილით მომხმარებელი ვერ მოიძებნა!";
+                return View();
+            }
+            ViewBag.persid = pers.Id;                        // აქ არ მუშაობს, ვატან დატას და ვიუ-ში არ ისეტება
+            ViewData["PersonEmail"] = pers.Email;
+            return View("ResetPassword");
+        }
+
+
+        [HttpGet]
+        public async Task<ActionResult> ResetPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> ResetPassword(string newPassword, string confirm, int PersonEmail)
+        {
+            if (newPassword != confirm)
+            {
+                TempData["PassErr"] = "პაროლები არ ემთხვევა ერთმანეთს";
+                return View();
+            }
+            //int persid = Int32.Parse(PersonId);
+            var pers = await _db.Users.Where(k=>k.Id == PersonEmail).SingleOrDefaultAsync();
+            pers.Password = newPassword;
+            _db.SaveChanges();
+            TempData["ChangedSucess"] = " Password changed succesfully";
+            return View("Login");
+        }
+
     }
 }

@@ -5,7 +5,6 @@
 
 <h2>Register</h2>
 <h4 class="text-danger"> @TempData["personexists"] </h4>  
-<h4 class="text-success"> @TempData["regSuccess"] </h4>
 <h4 class="text-danger"> @TempData["usernameError"] </h4>
 <h4 class="text-danger"> @TempData["passwordsMatchErr"] </h4>
 <h4 class="text-danger"> @TempData["PNerror"] </h4>
@@ -54,8 +53,6 @@
             <input type="password" id="password_confirm" name="ConfirmPassword" placeholder="" class="input-xlarge">
         </div>
 
-
-
         <div class="control-group">
             <!-- Button -->
             <div class="controls">
@@ -63,7 +60,17 @@
             </div>
         </div>
     </fieldset>
+    
 </form>
+<h4 class="text-success reg-success"> 
+    @TempData["regSuccess"]
+</h4>
+
+
+
+
+
+
 
 
 
