@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using Ticket_Sell.Data;
 using Ticket_Sell.Helpers;
@@ -57,14 +58,20 @@ namespace Ticket_Sell.Controllers
                 return View(ModelState);
             }
             var PerCheck = await _db.Users.Where(k => (k.Email == model.Email) || (k.PN == model.PN)).FirstOrDefaultAsync();
-            if(PerCheck != null)
+            var checkMobile = await _db.Users.Where(k => (k.Mobile == model.Mobile)).FirstOrDefaultAsync();
+            if (PerCheck != null)
             {
-                TempData["personexists"] = "მოცემული მეილით ან პირადი ნომრით მომხმარებელი უკვე არსებობს!";
+                TempData["personexists"] = "მოცემული მეილი, პირადი ნომრით მომხმარებელი უკვე არსებობს!";
                 return View();
+            } else if(checkMobile != null)
+            {
+                TempData["personexists"] = "ნომერი დაკავებულია!";
             } else
             {
-                string PassHash = HashPassword.GetPassHash(model.Password);
-                string Salt = HashPassword.saltstring;
+                byte[] salt = PasswordHasher.GenerateSalt();
+                string PassHash = PasswordHasher.HashPassword(model.Password, salt);
+                string saltstring = PasswordHasher.ConvertToString(salt);
+                //string Salt = HashPassword.saltstring;
                 User toregister = new();
                 toregister.Username = model.Username;
                 toregister.Email = model.Email;
@@ -72,7 +79,7 @@ namespace Ticket_Sell.Controllers
                 toregister.PN = model.PN;
                 toregister.UserTypeId = UserTypeId;
                 toregister.Password = PassHash;
-                toregister.Salt = Salt;
+                toregister.Salt = saltstring;
                 toregister.Status = true;
                 _db.Users.Add(toregister);
                 _db.SaveChanges();
@@ -90,22 +97,23 @@ namespace Ticket_Sell.Controllers
         [HttpPost]
         public async Task<ActionResult> Login(string Username, string password)
         {
-            var prs = await _db.Users.Where(x => (x.Email == Username) || (x.Mobile == Username)).FirstOrDefaultAsync();
+            var prs = await _db.Users.Where(x => (x.Email == Username) || (x.Mobile == Username)).SingleOrDefaultAsync();
             if (prs == null)
             {
                 TempData["logerror"] = "სახელი ან პაროლი არასწორია";
                 return View();
             }
-            string Salt = prs.Salt;
-            string PassHash = HashPassword.GetPassHash(password);
-            
-            if (prs.Password != PassHash)
+            byte[] salt = PasswordHasher.ConvertToBytes(prs.Salt);
+            string PassHash = PasswordHasher.HashPassword(password, salt);
+
+            if (PasswordMatches(PassHash, prs.Password))
+            {
+                return Ok("Logged In");
+            }
+            else
             {
                 TempData["logerror"] = "სახელი ან პაროლი არასწორია";
                 return View();
-            }else if (password == PassHash)
-            {
-                return Ok("Logged In");
             }
             return Ok("Invalid Login Attempt");
         }
@@ -126,7 +134,7 @@ namespace Ticket_Sell.Controllers
                 return View();
             }
             ViewData["personId"] = per.Id;
-            return View("ResetPassword");
+            return View("ResetPassword", ViewData["personId"]);
         }
 
         [HttpGet]
@@ -138,6 +146,11 @@ namespace Ticket_Sell.Controllers
         [HttpPost]
         public async Task<ActionResult> ResetPassword(string newPass, string confPass, int persId)
         {
+            if(string.IsNullOrEmpty(newPass) || string.IsNullOrEmpty(confPass))
+            {
+                TempData["nullError"] = "fill all fields!";
+                return View();
+            }
             if(newPass != confPass)
             {
                 TempData["dontMatch"] = "Passwords does not match! ";
@@ -149,16 +162,24 @@ namespace Ticket_Sell.Controllers
                 TempData["ChangeError"] = "could not find user";
                 return View();
             }
-            if(perToChange.Password == newPass)
+            byte[] salt = PasswordHasher.ConvertToBytes(perToChange.Salt);
+            string PassHash = PasswordHasher.HashPassword(newPass, salt);
+            if (perToChange.Password == PassHash)
             {
                 TempData["SamePass"] = "new password can not be old password";
                 return View();
             }
-            perToChange.Password = newPass;
+            perToChange.Password = PassHash;
             _db.SaveChanges();
-            TempData["ChangeSuccess"] = "password changed succesfully";
+            TempData["ChangeSuccess"] = "password updated succesfully";
             return RedirectToAction("Login", "Home");
         }
+
+        private Boolean PasswordMatches(string userpassword, string passwordhash)
+        {
+            return (userpassword == passwordhash);
+        }
+
         public IActionResult Privacy()
         {
             return View();

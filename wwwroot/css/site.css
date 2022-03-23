@@ -82,3 +82,41 @@ body {
 .forg-pass {
     margin-top: -30px;
 }
+
+.fa-4x {
+    font-size: 1em !important;
+}
+
+.col-md-offset-4 {
+    margin-left: 3rem !important;
+}
+.panel-default {
+    border: none !important;
+}
+
+@media (max-width: 995px) {
+    .panel-default {
+        width: 319px !important;
+    }
+}
+
+@media (max-width: 500px) {
+    .panel-default {
+        width: 240px !important;
+    }
+}
+
+#register-form {
+    width: 185px !important;
+}
+
+.form-control {
+    height: 30px !important;
+}
+
+.login-btn {
+    height: 32px;
+    padding-top: 3px;
+    margin-top: 5px;
+    width: 80px;
+}
